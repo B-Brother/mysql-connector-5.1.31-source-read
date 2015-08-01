@@ -78,7 +78,7 @@ import com.mysql.jdbc.util.ResultSetUtil;
 public class MysqlIO {
     private static final int UTF8_CHARSET_INDEX = 33;
     private static final String CODE_PAGE_1252 = "Cp1252";
-	 protected static final int NULL_LENGTH = ~0;
+	protected static final int NULL_LENGTH = ~0;
     protected static final int COMP_HEADER_LENGTH = 3;
     protected static final int MIN_COMPRESS_LEN = 50;
     protected static final int HEADER_LENGTH = 4;
@@ -101,7 +101,7 @@ public class MysqlIO {
     protected static final int	CLIENT_SECURE_CONNECTION	= 0x00008000;
     private static final int	CLIENT_MULTI_STATEMENTS		= 0x00010000; // Enable/disable multiquery support
     private static final int	CLIENT_MULTI_RESULTS		= 0x00020000; // Enable/disable multi-results
-    private static final int	CLIENT_PLUGIN_AUTH			= 0x00080000;
+    private static final int	CLIENT_PLUGIN_AUTH			= 0x80000;
     private static final int	CLIENT_CONNECT_ATTRS		= 0x00100000;
     private static final int	CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA	= 0x00200000;
     private static final int	CLIENT_CAN_HANDLE_EXPIRED_PASSWORD		= 0x00400000;
@@ -116,6 +116,10 @@ public class MysqlIO {
     private static final String FALSE_SCRAMBLE = "xxxxxxxx"; //$NON-NLS-1$
     protected static final int MAX_QUERY_SIZE_TO_LOG = 1024; // truncate logging of queries at 1K
     protected static final int MAX_QUERY_SIZE_TO_EXPLAIN = 1024 * 1024; // don't explain queries above 1MB
+    
+    /**
+     * 初始包大小:1024
+     */
     protected static final int INITIAL_PACKET_SIZE = 1024;
     /**
      * We store the platform 'encoding' here, only used to avoid munging
@@ -261,6 +265,8 @@ public class MysqlIO {
     private int authPluginDataLength = 0;
 	
     /**
+     * <P>和mysql服务器建立一个connection流。</P>
+     * 
      * Constructor:  Connect to the MySQL server and setup a stream connection.
      *
      * @param host the hostname to connect to
@@ -279,6 +285,7 @@ public class MysqlIO {
         int socketTimeout, int useBufferRowSizeThreshold) throws IOException, SQLException {
         this.connection = conn;
         
+        // mysql:enablePacketDebug 默认false。
         if (this.connection.getEnablePacketDebug()) {
             this.packetDebugRingBuffer = new LinkedList<StringBuffer>();
         }
@@ -299,13 +306,18 @@ public class MysqlIO {
         this.host = host;
 
         this.socketFactoryClassName = socketFactoryClassName;
+        
+        // socket工程实例化
         this.socketFactory = createSocketFactory();
+        
         this.exceptionInterceptor = this.connection.getExceptionInterceptor();
         
         try {
+        	// 尝试建立连接，建立可通信的socket
         	this.mysqlConnection = this.socketFactory.connect(this.host, this.port, props);
 	        
 	
+        	// 不懂 TODO!
 	        if (socketTimeout != 0) {
 	        	try {
 	        		this.mysqlConnection.setSoTimeout(socketTimeout);
@@ -313,7 +325,8 @@ public class MysqlIO {
 	        		/* Ignore if the platform does not support it */
 	        	}
 	        }
-	
+	        
+	        // 不懂 TODO
 	        this.mysqlConnection = this.socketFactory.beforeHandshake();
 	
 	        if (this.connection.getUseReadAheadInput()) {
@@ -323,12 +336,10 @@ public class MysqlIO {
 	        } else if (this.connection.useUnbufferedInput()) {
 	        	this.mysqlInput = this.mysqlConnection.getInputStream();
 	        } else {
-	        	this.mysqlInput = new BufferedInputStream(this.mysqlConnection.getInputStream(),
-	        			16384);
+	        	this.mysqlInput = new BufferedInputStream(this.mysqlConnection.getInputStream(), 16384);
 	        }
 	
-	        this.mysqlOutput = new BufferedOutputStream(this.mysqlConnection.getOutputStream(),
-	        		16384);
+	        this.mysqlOutput = new BufferedOutputStream(this.mysqlConnection.getOutputStream(), 16384);
 	
 	
 	        this.isInteractiveClient = this.connection.getInteractiveClient();
@@ -602,6 +613,7 @@ public class MysqlIO {
                 throw new IOException(Messages.getString("MysqlIO.1")); //$NON-NLS-1$
             }
 
+            // 不懂 TODO
             int packetLength = (this.packetHeaderBuf[0] & 0xff) +
                 ((this.packetHeaderBuf[1] & 0xff) << 8) +
                 ((this.packetHeaderBuf[2] & 0xff) << 16);
@@ -1218,12 +1230,12 @@ public class MysqlIO {
            		StringBuffer newSeed;
             	// read string[$len] auth-plugin-data-part-2 ($len=MAX(13, length of auth-plugin-data - 8))
            		if (this.authPluginDataLength > 0) {
-// TODO: disabled the following check for further clarification
-//         			if (this.authPluginDataLength < 21) {
-//                      forceClose();
-//                      throw SQLError.createSQLException(Messages.getString("MysqlIO.103"), //$NON-NLS-1$
-//                          SQLError.SQL_STATE_UNABLE_TO_CONNECT_TO_DATASOURCE, getExceptionInterceptor());
-//         			}
+					// TODO: disabled the following check for further clarification
+					//         			if (this.authPluginDataLength < 21) {
+					//                      forceClose();
+					//                      throw SQLError.createSQLException(Messages.getString("MysqlIO.103"), //$NON-NLS-1$
+					//                          SQLError.SQL_STATE_UNABLE_TO_CONNECT_TO_DATASOURCE, getExceptionInterceptor());
+					//         			}
                     seedPart2 = buf.readString("ASCII", getExceptionInterceptor(), this.authPluginDataLength - 8);
                     newSeed = new StringBuffer(this.authPluginDataLength);
            		} else {
@@ -3465,6 +3477,13 @@ public class MysqlIO {
         }
     }
 
+    /**
+     * DEFAULT socketFactoryClassName = com.mysql.jdbc.StandardSocketFactory
+     * 实例化StandardSocketFactory。
+     * 
+     * @return
+     * @throws SQLException
+     */
     private SocketFactory createSocketFactory() throws SQLException {
         try {
             if (this.socketFactoryClassName == null) {
@@ -3472,8 +3491,7 @@ public class MysqlIO {
                     SQLError.SQL_STATE_UNABLE_TO_CONNECT_TO_DATASOURCE, getExceptionInterceptor());
             }
 
-            return (SocketFactory) (Class.forName(this.socketFactoryClassName)
-                                         .newInstance());
+            return (SocketFactory) (Class.forName(this.socketFactoryClassName).newInstance());
         } catch (Exception ex) {
             SQLException sqlEx = SQLError.createSQLException(Messages.getString("MysqlIO.76") //$NON-NLS-1$
                  +this.socketFactoryClassName +

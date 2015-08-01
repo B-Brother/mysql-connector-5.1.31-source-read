@@ -72,16 +72,26 @@ public class NonRegisteringDriver implements java.sql.Driver {
 
 	private static final String REPLICATION_URL_PREFIX = "jdbc:mysql:replication://";
 
+	/**
+	 * 标准前缀
+	 */
 	private static final String URL_PREFIX = "jdbc:mysql://";
 
+	/**
+	 * 使用暂时未知 TODO
+	 */
 	private static final String MXJ_URL_PREFIX = "jdbc:mysql:mxj://";
 
+	/**
+	 * 暂时只知道和负载均衡相关
+	 */
 	public static final String LOADBALANCE_URL_PREFIX = "jdbc:mysql:loadbalance://";
 
 	protected static final ConcurrentHashMap<ConnectionPhantomReference, ConnectionPhantomReference> connectionPhantomRefs = new ConcurrentHashMap<ConnectionPhantomReference, ConnectionPhantomReference>();
 	
 	protected static final ReferenceQueue<ConnectionImpl> refQueue = new ReferenceQueue<ConnectionImpl>();
 	
+	// 当前客户端系统名称
 	public static final String OS = getOSName();
 	public static final String PLATFORM = getPlatform();
 	public static final String LICENSE = "@MYSQL_CJ_LICENSE_TYPE@";
@@ -91,6 +101,8 @@ public class NonRegisteringDriver implements java.sql.Driver {
 	public static final String NAME = "@MYSQL_CJ_DISPLAY_PROD_NAME@";
 	
 	/*
+	 * <p>当前客户端系统名称</p>
+	 * 
 	 * Standardizes OS name information to align with other drivers/clients
 	 * for MySQL connection attributes
 	 *     
@@ -321,11 +333,11 @@ public class NonRegisteringDriver implements java.sql.Driver {
 	 */
 	public java.sql.Connection connect(String url, Properties info)
 			throws SQLException {
+		// 判断url是负载均衡还是mxj的连接方式，这里可以不用考虑
 		if (url != null) {
 			if (StringUtils.startsWithIgnoreCase(url, LOADBALANCE_URL_PREFIX)) {
 				return connectLoadBalanced(url, info);
-			} else if (StringUtils.startsWithIgnoreCase(url,
-					REPLICATION_URL_PREFIX)) {
+			} else if (StringUtils.startsWithIgnoreCase(url, REPLICATION_URL_PREFIX)) {
 				return connectReplicationConnection(url, info);
 			}
 		}
@@ -341,6 +353,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
 		}
 		
 		try {
+			// 获得jdbc连接。
 			Connection newConn = ConnectionImpl.getInstance(host(props), port(props), props, database(props), url);
 			
 			return newConn;
@@ -973,6 +986,13 @@ public class NonRegisteringDriver implements java.sql.Driver {
 		return hostProps;
 	}
 	
+	/**
+	 * 什么样的host居然是这样的结构?address=开头?
+	 * 网上也没找到神马文档。 TODO
+	 * 
+	 * @param host
+	 * @return
+	 */
 	public static boolean isHostPropertiesList(String host) {
 		return host != null && StringUtils.startsWithIgnoreCase(host, "address=");
 	}

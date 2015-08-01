@@ -75,8 +75,7 @@ public class LogFactory {
 						+ "." + className);
 			}
 
-			Constructor<?> constructor = loggerClass
-					.getConstructor(new Class[] { String.class });
+			Constructor<?> constructor = loggerClass.getConstructor(new Class[] { String.class });
 
 			return (Log) constructor.newInstance(new Object[] { instanceName });
 		} catch (ClassNotFoundException cnfe) {

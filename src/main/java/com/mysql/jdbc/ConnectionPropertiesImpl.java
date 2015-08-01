@@ -56,15 +56,13 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 	
 		private static final long serialVersionUID = 2540132501709159404L;
 
-		/**
-		 * DOCUMENT ME!
-		 * 
-		 * @param propertyNameToSet
-		 * @param defaultValueToSet
-		 * @param descriptionToSet
-		 *            DOCUMENT ME!
-		 * @param sinceVersionToSet
-		 *            DOCUMENT ME!
+		/** 
+		 * @param propertyNameToSet	 设置的参数名称
+		 * @param defaultValueToSet	 设置的参数值
+		 * @param descriptionToSet	 参数描述
+		 * @param sinceVersionToSet	 从哪个版本开始该参数开始出现
+		 * @param category			 种类(TODO)	
+		 * @param orderInCategory    种类中排序(TODO)
 		 */
 		BooleanConnectionProperty(String propertyNameToSet,
 				boolean defaultValueToSet, String descriptionToSet,
@@ -121,6 +119,13 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		}
 	}
 
+	/**
+	 * 抽象的连接属性类。他的子类有BooleanConnectionProperty，IntegerConnectionProperty，StringConnectionProperty
+	 * 而IntegerConnectionProperty的子类还包括MemorySizeConnectionProperty和LongConnectonProperty.
+	 * 
+	 * @author beckham
+	 *
+	 */
 	static abstract class ConnectionProperty implements Serializable {
 
 		static final long serialVersionUID = -6644853639584478367L;
@@ -213,6 +218,14 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 
 		abstract boolean hasValueConstraints();
 
+		/**
+		 * 尝试从传入的properties获取当前属性。如果获取到则当前参数的值就是它。如果获取不到去参数的默认属性
+		 * (默认属性在初始化的时候都有传入)
+		 * 
+		 * @param extractFrom
+		 * @param exceptionInterceptor
+		 * @throws SQLException
+		 */
 		void initializeFrom(Properties extractFrom, ExceptionInterceptor exceptionInterceptor) throws SQLException {
 			String extractedValue = extractFrom.getProperty(getPropertyName());
 			extractFrom.remove(getPropertyName());
@@ -242,8 +255,7 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		}
 
 		/**
-		 * @param order
-		 *            The order to set.
+		 * @param order The order to set.
 		 */
 		void setOrder(int order) {
 			this.order = order;
@@ -329,6 +341,17 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 
 		int multiplier = 1;
 
+		/** 
+		 * @param propertyNameToSet
+		 * @param defaultValueToSet
+		 * @param allowableValuesToSet  允许的值集
+		 * @param lowerBoundToSet
+		 * @param upperBoundToSet
+		 * @param descriptionToSet
+		 * @param sinceVersionToSet
+		 * @param category
+		 * @param orderInCategory
+		 */
 		public IntegerConnectionProperty(String propertyNameToSet,
 				Object defaultValueToSet, String[] allowableValuesToSet,
 				int lowerBoundToSet, int upperBoundToSet,
@@ -338,7 +361,17 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 					lowerBoundToSet, upperBoundToSet, descriptionToSet, sinceVersionToSet,
 					category, orderInCategory);
 		}
-
+		
+		/** 
+		 * @param propertyNameToSet  参数名称
+		 * @param defaultValueToSet	 参数默认值
+		 * @param lowerBoundToSet	 下限
+		 * @param upperBoundToSet	 上限
+		 * @param descriptionToSet	 参数描述
+		 * @param sinceVersionToSet	 从哪个版本开始出现
+		 * @param category			 种类
+		 * @param orderInCategory	 种类中排序
+		 */
 		IntegerConnectionProperty(String propertyNameToSet,
 				int defaultValueToSet, int lowerBoundToSet,
 				int upperBoundToSet, String descriptionToSet,
@@ -348,16 +381,14 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 					sinceVersionToSet, category, orderInCategory);
 		}
 
-		/**
-		 * DOCUMENT ME!
-		 * 
+		/** 
 		 * @param propertyNameToSet
 		 * @param defaultValueToSet
 		 * @param descriptionToSet
 		 * @param sinceVersionToSet
-		 *            DOCUMENT ME!
+		 * @param category
+		 * @param orderInCategory
 		 */
-
 		IntegerConnectionProperty(String propertyNameToSet,
 				int defaultValueToSet, String descriptionToSet,
 				String sinceVersionToSet, String category, int orderInCategory) {
@@ -451,6 +482,16 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 
 		private static final long serialVersionUID = 6068572984340480895L;
 
+		/** 
+		 * @param propertyNameToSet  参数名称
+		 * @param defaultValueToSet	 参数默认值
+		 * @param lowerBoundToSet	 下限
+		 * @param upperBoundToSet	 上限
+		 * @param descriptionToSet	 参数描述
+		 * @param sinceVersionToSet	 从哪个版本开始出现
+		 * @param category			 种类
+		 * @param orderInCategory	 种类中排序
+		 */
 		LongConnectionProperty(String propertyNameToSet,
 				long defaultValueToSet, long lowerBoundToSet,
 				long upperBoundToSet, String descriptionToSet,
@@ -460,7 +501,6 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 					sinceVersionToSet, category, orderInCategory);
 		}
 		
-
 		LongConnectionProperty(String propertyNameToSet,
 				long defaultValueToSet, String descriptionToSet,
 				String sinceVersionToSet, String category, int orderInCategory) {
@@ -519,6 +559,16 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 
 		private String valueAsString;
 		
+		/** 
+		 * @param propertyNameToSet  参数名称
+		 * @param defaultValueToSet	 参数默认值
+		 * @param lowerBoundToSet	 下限
+		 * @param upperBoundToSet	 上限
+		 * @param descriptionToSet	 参数描述
+		 * @param sinceVersionToSet	 从哪个版本开始出现
+		 * @param category			 种类
+		 * @param orderInCategory	 种类中排序
+		 */
 		MemorySizeConnectionProperty(String propertyNameToSet,
 				int defaultValueToSet, int lowerBoundToSet,
 				int upperBoundToSet, String descriptionToSet,
@@ -582,6 +632,14 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 	
 		private static final long serialVersionUID = 5432127962785948272L;
 
+		/** 
+		 * @param propertyNameToSet	 设置参数名称
+		 * @param defaultValueToSet	 设置值
+		 * @param descriptionToSet	 描述信息
+		 * @param sinceVersionToSet  从哪个版本开始
+		 * @param category			 种类
+		 * @param orderInCategory	 种类顺序
+		 */
 		StringConnectionProperty(String propertyNameToSet,
 				String defaultValueToSet, String descriptionToSet,
 				String sinceVersionToSet, String category, int orderInCategory) {
@@ -589,15 +647,14 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 					sinceVersionToSet, category, orderInCategory);
 		}
 
-		/**
-		 * DOCUMENT ME!
-		 * 
+		/** 
 		 * @param propertyNameToSet
 		 * @param defaultValueToSet
-		 * @param allowableValuesToSet
+		 * @param allowableValuesToSet  可允许的值集
 		 * @param descriptionToSet
 		 * @param sinceVersionToSet
-		 *            DOCUMENT ME!
+		 * @param category
+		 * @param orderInCategory
 		 */
 		StringConnectionProperty(String propertyNameToSet,
 				String defaultValueToSet, String[] allowableValuesToSet,
@@ -647,6 +704,17 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		}
 	}
 
+	
+	/***
+	 *  下边七个category加一个属性。在properties里边说明如下。暂时不明有什么用
+	 *  ConnectionProperties.categoryConnectionAuthentication=Connection/Authentication
+		ConnectionProperties.categoryNetworking=Networking
+		ConnectionProperties.categoryDebuggingProfiling=Debugging/Profiling
+		ConnectionProperties.categorryHA=High Availability and Clustering
+		ConnectionProperties.categoryMisc=Miscellaneous
+		ConnectionProperties.categoryPerformance=Performance Extensions
+		ConnectionProperties.categorySecurity=Security
+	 */
 	private static final String CONNECTION_AND_AUTH_CATEGORY = Messages.getString("ConnectionProperties.categoryConnectionAuthentication"); //$NON-NLS-1$
 
 	private static final String NETWORK_CATEGORY = Messages.getString("ConnectionProperties.categoryNetworking"); //$NON-NLS-1$
@@ -666,6 +734,7 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		HA_CATEGORY, SECURITY_CATEGORY,
 		PERFORMANCE_CATEGORY, DEBUGING_PROFILING_CATEGORY, MISC_CATEGORY };
 	
+	
 	private static final ArrayList<java.lang.reflect.Field> PROPERTY_LIST = new ArrayList<java.lang.reflect.Field>();
 
 	//
@@ -681,13 +750,12 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 
 	static {
 		try {
-			java.lang.reflect.Field[] declaredFields = ConnectionPropertiesImpl.class
-					.getDeclaredFields();
+			// 获取到ConnectionPropertiesImpl类所有已经声明的字段，卧槽快200个(750行开始到1900行貌似全部是都是这些JB玩意儿...)
+			java.lang.reflect.Field[] declaredFields = ConnectionPropertiesImpl.class.getDeclaredFields();
 
 			for (int i = 0; i < declaredFields.length; i++) {
-				// 这里暂时没明白为什么一定要ConnectionProperty的子实现列表， 这个static就是为了做这个事情
-				if (ConnectionPropertiesImpl.ConnectionProperty.class
-						.isAssignableFrom(declaredFields[i].getType())) {
+				// 获取ConnectionProperty的子类属性列表
+				if (ConnectionPropertiesImpl.ConnectionProperty.class.isAssignableFrom(declaredFields[i].getType())) {
 					PROPERTY_LIST.add(declaredFields[i]);
 				}
 			}
@@ -1335,7 +1403,10 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 			"com.mysql.jdbc.profiler.LoggingProfilerEventHandler",
 			Messages.getString("ConnectionProperties.profilerEventHandler"),
 			"5.1.6", DEBUGING_PROFILING_CATEGORY, Integer.MIN_VALUE); //$NON-NLS-1$
-			
+		
+	/**
+	 * 尼玛居然还有个profileSql和profileSQL
+	 */
 	private StringConnectionProperty profileSql = new StringConnectionProperty(
 			"profileSql", //$NON-NLS-1$
 			null,
@@ -1491,6 +1562,9 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 			DEBUGING_PROFILING_CATEGORY,
 			10);
 	
+	/**
+	 * socketFactoryClassName参数指定了类名为com.mysql.jdbc.StandardSocketFactory。务必注意。
+	 */
 	private StringConnectionProperty socketFactoryClassName = new StringConnectionProperty(
 			"socketFactory", //$NON-NLS-1$
 			StandardSocketFactory.class.getName(),
@@ -1934,18 +2008,15 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		int numPropertiesToSet = PROPERTY_LIST.size();
 
 		for (int i = 0; i < numPropertiesToSet; i++) {
-			java.lang.reflect.Field propertyField = PROPERTY_LIST
-					.get(i);
+			java.lang.reflect.Field propertyField = PROPERTY_LIST.get(i);
 
 			try {
-				ConnectionProperty propToGet = (ConnectionProperty) propertyField
-						.get(this);
+				ConnectionProperty propToGet = (ConnectionProperty) propertyField.get(this);
 
 				Object propValue = propToGet.getValueAsObject();
 
 				if (propValue != null) {
-					info.setProperty(propToGet.getPropertyName(), propValue
-							.toString());
+					info.setProperty(propToGet.getPropertyName(), propValue.toString());
 				}
 			} catch (IllegalAccessException iae) {
 				throw SQLError.createSQLException("Internal properties failure", //$NON-NLS-1$
@@ -2856,7 +2927,9 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 	 */
 	protected void initializeProperties(Properties info) throws SQLException {
 		if (info != null) {
-			// For backwards-compatibility 向后兼容
+			// For backwards-compatibility 向后兼容 这个profileSql是个啥东西? TODO
+			// 倒是有这么一个标题...
+			// mysql使用profile分析sql执行状态：http://www.360doc.com/content/14/0613/16/18107249_386312302.shtml  
 			String profileSqlLc = info.getProperty("profileSql"); //$NON-NLS-1$
 
 			if (profileSqlLc != null) {
@@ -2872,17 +2945,18 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 			infoCopy.remove(NonRegisteringDriver.PORT_PROPERTY_KEY);
 			infoCopy.remove("profileSql"); //$NON-NLS-1$
 
+			// PROPERTY_LIST已经在静态块中准备好，里边包含了所有的ConnectionProperty的子类实例。
 			int numPropertiesToSet = PROPERTY_LIST.size();
-
-			// 这个for循环是当真没有看懂 TODO
+ 
+			// 没搞懂：这里为什么不是直接把对象放到list里边而是非周知的先field再对象?? TODO
 			for (int i = 0; i < numPropertiesToSet; i++) {
-				java.lang.reflect.Field propertyField = PROPERTY_LIST
-						.get(i);
+				java.lang.reflect.Field propertyField = PROPERTY_LIST.get(i);
 
 				try {
-					ConnectionProperty propToSet = (ConnectionProperty) propertyField
-							.get(this);
+					ConnectionProperty propToSet = (ConnectionProperty) propertyField.get(this);
 
+					// 给每个参数赋值。有些可能在infoCopy这个properties里有。有的话就用它。
+					// 没有的话用初始化时候的默认值。
 					propToSet.initializeFrom(infoCopy, getExceptionInterceptor());
 				} catch (IllegalAccessException iae) {
 					throw SQLError.createSQLException(
@@ -2892,6 +2966,8 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 				}
 			}
 
+			// 属性初始化善后处理
+			// 总结来讲，就是将一些原本保存在ConnectionProperties的参数拿出来放到基本类型和String中。蛋疼。
 			postInitialization();
 		}
 	}
@@ -2899,13 +2975,13 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 	protected void postInitialization() throws SQLException {
 	
 		// Support 'old' profileSql capitalization
+		// profileSql的默认是空。PS:依然不确定profileSql是什么意思.... TODO
 		if (this.profileSql.getValueAsObject() != null) {
-			this.profileSQL.initializeFrom(this.profileSql.getValueAsObject()
-					.toString(), getExceptionInterceptor());
+			this.profileSQL.initializeFrom(this.profileSql.getValueAsObject().toString(), getExceptionInterceptor());
 		}
 
-		this.reconnectTxAtEndAsBoolean = ((Boolean) this.reconnectAtTxEnd
-				.getValueAsObject()).booleanValue();
+		// 3.0.10的mysql多了这个属性，不明白含义，默认false
+		this.reconnectTxAtEndAsBoolean = ((Boolean) this.reconnectAtTxEnd.getValueAsObject()).booleanValue();
 
 		// Adjust max rows
 		if (this.getMaxRows() == 0) {
@@ -2935,8 +3011,8 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 		// Metadata caching is only supported on JDK-1.4 and newer
 		// because it relies on LinkedHashMap being present.
 		// Check (and disable) if not supported
-		if (((Boolean) this.cacheResultSetMetadata.getValueAsObject())
-				.booleanValue()) {
+		// metadata caching只在1.4或更高的jdk才被支持。因为底层用到了LinkedHashMap，不过系统默认给了false。
+		if (((Boolean) this.cacheResultSetMetadata.getValueAsObject()).booleanValue()) {
 			try {
 				Class.forName("java.util.LinkedHashMap"); //$NON-NLS-1$
 			} catch (ClassNotFoundException cnfe) {
@@ -2944,31 +3020,29 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
 			}
 		}
 
-		this.cacheResultSetMetaDataAsBoolean = this.cacheResultSetMetadata
-				.getValueAsBoolean();
+		// 部分参数简化保存，后边方法相互调用比较方便
+		this.cacheResultSetMetaDataAsBoolean = this.cacheResultSetMetadata.getValueAsBoolean();
 		this.useUnicodeAsBoolean = this.useUnicode.getValueAsBoolean();
-		this.characterEncodingAsString = ((String) this.characterEncoding
-				.getValueAsObject());
+		this.characterEncodingAsString = ((String) this.characterEncoding.getValueAsObject()); 
 		this.characterEncodingIsAliasForSjis = CharsetMapping.isAliasForSjis(this.characterEncodingAsString);
 		this.highAvailabilityAsBoolean = this.autoReconnect.getValueAsBoolean();
-		this.autoReconnectForPoolsAsBoolean = this.autoReconnectForPools
-				.getValueAsBoolean();
-		this.maxRowsAsInt = ((Integer) this.maxRows.getValueAsObject())
-				.intValue();
+		this.autoReconnectForPoolsAsBoolean = this.autoReconnectForPools.getValueAsBoolean();
+		this.maxRowsAsInt = ((Integer) this.maxRows.getValueAsObject()).intValue();
 		this.profileSQLAsBoolean = this.profileSQL.getValueAsBoolean();
-		this.useUsageAdvisorAsBoolean = this.useUsageAdvisor
-				.getValueAsBoolean();
-		this.useOldUTF8BehaviorAsBoolean = this.useOldUTF8Behavior
-				.getValueAsBoolean();
-		this.autoGenerateTestcaseScriptAsBoolean = this.autoGenerateTestcaseScript
-				.getValueAsBoolean();
-		this.maintainTimeStatsAsBoolean = this.maintainTimeStats
-				.getValueAsBoolean();
+		this.useUsageAdvisorAsBoolean = this.useUsageAdvisor.getValueAsBoolean();
+		this.useOldUTF8BehaviorAsBoolean = this.useOldUTF8Behavior.getValueAsBoolean();
+		this.autoGenerateTestcaseScriptAsBoolean = this.autoGenerateTestcaseScript.getValueAsBoolean();
+		this.maintainTimeStatsAsBoolean = this.maintainTimeStats.getValueAsBoolean(); 
 		this.jdbcCompliantTruncationForReads = getJdbcCompliantTruncation();
 		
+		// useCursorFetch和批量拿数据相关，可见叶正盛的介绍。
+		// http://blog.csdn.net/seven_3306/article/details/9303979
 		if (getUseCursorFetch()) {
 			// assume they want to use server-side prepared statements
 			// because they're required for this functionality
+			//
+			// 这里实际上是手动设置了useServerPrepStmts=true. 
+			// 看到一篇文章有介绍。只有使用了useServerPrepStmts=true才能开启Mysql的预编译。
 			setDetectServerPreparedStmts(true);
 		}
 	}

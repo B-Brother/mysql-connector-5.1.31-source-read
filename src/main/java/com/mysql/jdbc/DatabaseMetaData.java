@@ -693,22 +693,26 @@ public class DatabaseMetaData implements java.sql.DatabaseMetaData {
 
 	protected static final byte[] VIEW_AS_BYTES = "VIEW".getBytes();
 	
+	// static静态块初始化
 	private static final Constructor<?> JDBC_4_DBMD_SHOW_CTOR;
 	
+	// static静态块初始化
 	private static final Constructor<?> JDBC_4_DBMD_IS_CTOR;
 	
 	static {
+		// 又是静态初始化。如果当前使用规范为JDBC4,则初始化构造器。
 		if (Util.isJdbc4()) {
 			try {
-				JDBC_4_DBMD_SHOW_CTOR = Class.forName(
-						"com.mysql.jdbc.JDBC4DatabaseMetaData").getConstructor(
-						new Class[] { com.mysql.jdbc.MySQLConnection.class,
-								String.class });
-				JDBC_4_DBMD_IS_CTOR = Class.forName(
-						"com.mysql.jdbc.JDBC4DatabaseMetaDataUsingInfoSchema")
-						.getConstructor(
-								new Class[] { com.mysql.jdbc.MySQLConnection.class,
-										String.class });
+				JDBC_4_DBMD_SHOW_CTOR = Class.forName("com.mysql.jdbc.JDBC4DatabaseMetaData")
+											 .getConstructor(
+													 new Class[] { 
+															 com.mysql.jdbc.MySQLConnection.class,
+															 String.class });
+				JDBC_4_DBMD_IS_CTOR = Class.forName("com.mysql.jdbc.JDBC4DatabaseMetaDataUsingInfoSchema")
+										   .getConstructor(
+												   	 new Class[] { 
+												   			 com.mysql.jdbc.MySQLConnection.class,
+												   			 String.class });
 			} catch (SecurityException e) {
 				throw new RuntimeException(e);
 			} catch (NoSuchMethodException e) {
@@ -826,6 +830,7 @@ public class DatabaseMetaData implements java.sql.DatabaseMetaData {
 	protected static DatabaseMetaData getInstance(
 			MySQLConnection connToSet, String databaseToSet, boolean checkForInfoSchema)
 			throws SQLException {
+		// 针对低版本的规范做补偿
 		if (!Util.isJdbc4()) {
 			if (checkForInfoSchema && connToSet != null 
 					&& connToSet.getUseInformationSchema()
@@ -845,9 +850,12 @@ public class DatabaseMetaData implements java.sql.DatabaseMetaData {
 					JDBC_4_DBMD_IS_CTOR, new Object[] { connToSet,
 							databaseToSet }, connToSet.getExceptionInterceptor());
 		}
-
-		return (DatabaseMetaData) Util.handleNewInstance(JDBC_4_DBMD_SHOW_CTOR,
-				new Object[] { connToSet, databaseToSet }, connToSet.getExceptionInterceptor());
+		
+		// 拿到实例化对象
+		return (DatabaseMetaData) Util.handleNewInstance(
+				JDBC_4_DBMD_SHOW_CTOR,
+				new Object[] { connToSet, databaseToSet }, 
+				connToSet.getExceptionInterceptor());
 	}
 	
 	/**
@@ -864,8 +872,7 @@ public class DatabaseMetaData implements java.sql.DatabaseMetaData {
 		this.exceptionInterceptor = this.conn.getExceptionInterceptor();
 		
 		try {
-			this.quotedId = this.conn.supportsQuotedIdentifiers() ? getIdentifierQuoteString()
-					: "";
+			this.quotedId = this.conn.supportsQuotedIdentifiers() ? getIdentifierQuoteString() : "";
 		} catch (SQLException sqlEx) {
 			// Forced by API, never thrown from getIdentifierQuoteString() in
 			// this

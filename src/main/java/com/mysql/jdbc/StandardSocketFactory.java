@@ -134,6 +134,8 @@ public class StandardSocketFactory implements SocketFactory, SocketMetadata {
 	}
 
 	/**
+	 * <p>socket配置</p>
+	 * 
 	 * Configures socket properties based on properties from the connection
 	 * (tcpNoDelay, snd/rcv buf, traffic class, etc).
 	 *
@@ -257,6 +259,7 @@ public class StandardSocketFactory implements SocketFactory, SocketMetadata {
 						try {
 							this.rawSocket = new Socket(possibleAddresses[i], this.port);
 
+							// socket的tcp参数配置
 							configureSocket(this.rawSocket, props);
 
 							break;
@@ -332,6 +335,8 @@ public class StandardSocketFactory implements SocketFactory, SocketMetadata {
 						unwrapExceptionToProperClassAndThrowIt(t);
 					}
 				}
+				
+				// 不懂! TODO
 				resetLoginTimeCountdown();
 
 				return this.rawSocket;

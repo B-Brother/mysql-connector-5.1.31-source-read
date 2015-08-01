@@ -97,8 +97,7 @@ public class Util {
 
 	static {
 		try {
-			CAST_METHOD = Class.class.getMethod("cast",
-					new Class[] { Object.class });
+			CAST_METHOD = Class.class.getMethod("cast", new Class[] { Object.class });
 		} catch (Throwable t) {
 			// ignore - not available in this VM
 		}
@@ -130,6 +129,11 @@ public class Util {
 	// ~ Methods
 	// ----------------------------------------------------------------
 
+	/**
+	 * 状态判断，当前是否运行在JDBC4规范之下
+	 * 
+	 * @return
+	 */
 	public static boolean isJdbc4() {
 		return isJdbc4;
 	}
@@ -596,6 +600,7 @@ public class Util {
 	public static List<Extension> loadExtensions(Connection conn,
 			Properties props, String extensionClassNames,
 			String errorMessageKey, ExceptionInterceptor exceptionInterceptor) throws SQLException {
+		
 		List<Extension> extensionList = new LinkedList<Extension>();
 
 		List<String> interceptorsToCreate = StringUtils.split(extensionClassNames, ",", true);

@@ -822,8 +822,8 @@ public class CharsetMapping {
 		return ("SJIS".equalsIgnoreCase(encoding)
 				|| "WINDOWS-31J".equalsIgnoreCase(encoding)
 				|| "MS932".equalsIgnoreCase(encoding)
-				|| "SHIFT_JIS".equalsIgnoreCase(encoding) || "CP943"
-				.equalsIgnoreCase(encoding));
+				|| "SHIFT_JIS".equalsIgnoreCase(encoding) 
+				|| "CP943".equalsIgnoreCase(encoding));
 
 	}
 

@@ -304,13 +304,16 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		mapTransIsolationNameToValue.put("REPEATABLE-READ", TRANSACTION_REPEATABLE_READ);
 		mapTransIsolationNameToValue.put("SERIALIZABLE", TRANSACTION_SERIALIZABLE);
 
-		// 获取到了JDBC4Connection的五参数构造器
+		// 从此可大概知晓，jdbc的连接实际上就是准备好的JDBC4Connection对象。
 		if (Util.isJdbc4()) {
 			try {
-				JDBC_4_CONNECTION_CTOR = Class.forName(
-						"com.mysql.jdbc.JDBC4Connection").getConstructor(
-						new Class[] { String.class, Integer.TYPE,
-								Properties.class, String.class, String.class });
+				JDBC_4_CONNECTION_CTOR = Class.forName("com.mysql.jdbc.JDBC4Connection")
+											  .getConstructor(new Class[] { String.class,
+													  						Integer.TYPE,
+													  						Properties.class, 
+													  						String.class, 
+													  						String.class }
+											  );
 			} catch (SecurityException e) {
 				throw new RuntimeException(e);
 			} catch (NoSuchMethodException e) {
@@ -407,20 +410,26 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	 * the class verifier complains when it tries to load JDBC4-only interface
 	 * classes that are present in JDBC4 method signatures.
 	 */
-
 	protected static Connection getInstance(String hostToConnectTo,
 			int portToConnectTo, Properties info, String databaseToConnectTo,
 			String url) throws SQLException {
+		
+		// 这个判断是否是哪个版本的方法值得借鉴，根源就是看当前的新类是否能被加载进来
 		if (!Util.isJdbc4()) {
-			return new ConnectionImpl(hostToConnectTo, portToConnectTo, info,
-					databaseToConnectTo, url);
+			return new ConnectionImpl(hostToConnectTo, portToConnectTo, info, databaseToConnectTo, url);
 		}
 
-		// Util.handleNewInstance 入参为构造器和参数数组，用来实例化对象。
-		return (Connection) Util.handleNewInstance(JDBC_4_CONNECTION_CTOR,
+		// JDBC4发行后都统一走了这里。Util.handleNewInstance 入参为构造器和参数数组，用来实例化对象。
+		return (Connection) Util.handleNewInstance(
+				JDBC_4_CONNECTION_CTOR,		// 该构造器初始化在本类的static块执行。大概在300行左右。
 				new Object[] {
-							hostToConnectTo, Integer.valueOf(portToConnectTo), info,
-							databaseToConnectTo, url }, null);
+							hostToConnectTo, 
+							Integer.valueOf(portToConnectTo), 
+							info,
+							databaseToConnectTo,
+							url 
+							}, 
+				null);
 	}
 
 	private static final Random random = new Random();
@@ -530,7 +539,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	/** Is this connection associated with a global tx? */
 	private boolean isInGlobalTx = false;
 
-	/** Is this connection running inside a JDK-1.3 VM? */
+	/** (连接是否运行在jdk1.3版本以及以下?该参数在本类构造器中设置)Is this connection running inside a JDK-1.3 VM? */
 	private boolean isRunningOnJDK13 = false;
 
 	/** isolation level */
@@ -707,23 +716,19 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	 * 
 	 * Creates a connection to a MySQL Server.
 	 * 
-	 * @param hostToConnectTo
-	 *            the hostname of the database server
-	 * @param portToConnectTo
-	 *            the port number the server is listening on
-	 * @param info
-	 *            a Properties[] list holding the user and password
-	 * @param databaseToConnectTo
-	 *            the database to connect to
-	 * @param url
-	 *            the URL of the connection
-	 * @param d
-	 *            the Driver instantation of the connection
+	 * @param hostToConnectTo     the hostname of the database server
+	 * @param portToConnectTo     the port number the server is listening on
+	 * @param info 				  a Properties[] list holding the user and password
+	 * @param databaseToConnectTo the database to connect to
+	 * @param url 				  the URL of the connection 
 	 * @exception SQLException
 	 *                if a database access error occurs
 	 */
-	public ConnectionImpl(String hostToConnectTo, int portToConnectTo, Properties info,
-			String databaseToConnectTo, String url)
+	public ConnectionImpl(String hostToConnectTo,       // 普通测试下，下边几个参数的值  localhost
+						  int portToConnectTo,		    // 3306
+						  Properties info,			    // {HOST=localhost, user=root, HOST.1=localhost, password=beckham, DBNAME=tinker, PORT=3306, NUM_HOSTS=1, PORT.1=3306}
+						  String databaseToConnectTo,   // tinker
+						  String url)					// jdbc:mysql://localhost:3306/tinker
 			throws SQLException {
 	 
 		this.connectionCreationTimeMillis = System.currentTimeMillis();
@@ -734,12 +739,13 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 
 		// Stash away for later, used to clone this connection for Statement.cancel
 		// and Statement.setQueryTimeout().
-		//
-		
+		// 
+		// 官方注释说这三个字段是clone出来给cancel和queyrTimeout用的但是我没发现 TODO
 		this.origHostToConnectTo = hostToConnectTo;
 		this.origPortToConnectTo = portToConnectTo;
 		this.origDatabaseToConnectTo = databaseToConnectTo;
 
+		// 特意翻了Blob的truncate方法，是1.4版本才有的。
 		try {
 			Blob.class.getMethod("truncate", new Class[] {Long.TYPE});
 			
@@ -762,12 +768,14 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		// We will reset this to the configured logger during properties
 		// initialization.
 		//
+		// 日志的初始化 log = com.mysql.jdbc.log.StandardLogger
 		this.log = LogFactory.getLogger(getLogger(), LOGGER_INSTANCE_NAME, getExceptionInterceptor());
 
 		// We store this per-connection, due to static synchronization
 		// issues in Java's built-in TimeZone class...
 		this.defaultTimeZone = Util.getDefaultTimeZone();
 		
+		// 中国在东八区，默认的时区ID是Asia/Shanghai。所以isClientTzUTC肯定是false。
 		if ("GMT".equalsIgnoreCase(this.defaultTimeZone.getID())) {
 			this.isClientTzUTC = true;
 		} else {
@@ -776,6 +784,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 
 		this.openStatements = new HashMap<Statement, Statement>();
 		
+		// 一般来说，肯定不是，jdbc的host在一个url都只有一个。
 		if (NonRegisteringDriver.isHostPropertiesList(hostToConnectTo)) {
 			Properties hostSpecificProps = NonRegisteringDriver.expandHostKeyValues(hostToConnectTo);
 			
@@ -787,8 +796,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 				
 				info.setProperty(propertyName, propertyValue);
 			}
-		} else {
-		
+		} else { 
 			if (hostToConnectTo == null) {
 				this.host = "localhost";
 				this.hostPortPair = this.host + ":" + portToConnectTo;
@@ -804,12 +812,10 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		}
 
 		this.port = portToConnectTo;
-
 		this.database = databaseToConnectTo;
 		this.myURL = url;
 		this.user = info.getProperty(NonRegisteringDriver.USER_PROPERTY_KEY);
-		this.password = info
-				.getProperty(NonRegisteringDriver.PASSWORD_PROPERTY_KEY);
+		this.password = info.getProperty(NonRegisteringDriver.PASSWORD_PROPERTY_KEY);
 
 		if ((this.user == null) || this.user.equals("")) {
 			this.user = "";
@@ -822,9 +828,10 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		this.props = info;
 		
 		
-		// 这个initial方法需要关注一下 TODO
+		// 解析初始化的参数，然后赋值到各个对象的属性上
 		initializeDriverProperties(info);
 
+		// useUsageAdvisor is what  TODO
 		if (getUseUsageAdvisor()) {
 			this.pointOfOrigin = LogUtils.findCallingClassAndMethod(new Throwable());
 		} else {
@@ -833,7 +840,11 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		
 		try {
 			this.dbmd = getMetaData(false, false);
+			
+			// 在没有设置statementInterceptors参数情况下，其实这个方法的调用并没有什么卵用。
 			initializeSafeStatementInterceptors();
+			
+			// 核心中的核心!创建连接
 			createNewIO(false);
 			unSafeStatementInterceptors();
 		} catch (SQLException ex) {
@@ -854,14 +865,9 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 				mesg.append(".\n\n");
 				mesg.append("Make sure that there is a MySQL server ");
 				mesg.append("running on the machine/port you are trying ");
-				mesg
-						.append("to connect to and that the machine this software is "
-								+ "running on ");
-				mesg.append("is able to connect to this host/port "
-						+ "(i.e. not firewalled). ");
-				mesg
-						.append("Also make sure that the server has not been started "
-								+ "with the --skip-networking ");
+				mesg.append("to connect to and that the machine this software is running on ");
+				mesg.append("is able to connect to this host/port (i.e. not firewalled). ");
+				mesg.append("Also make sure that the server has not been started with the --skip-networking ");
 				mesg.append("flag.\n\n");
 			} else {
 				mesg.append("Unable to connect to database.");
@@ -895,12 +901,20 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
     	}
 	}
     
+    /**
+     * getStatementInterceptors用来获取statementInterceptors参数的值。因为默认没有设置。所以这里获取到的unwrappedInterceptors也为空。
+     * 
+     * 对应的下边的unwrappedInterceptors也是为空了。
+     */
     public void initializeSafeStatementInterceptors() throws SQLException {
     	this.isClosed = false;
-    	
-    	List<Extension> unwrappedInterceptors = Util.loadExtensions(this, this.props, 
-				getStatementInterceptors(),
-				"MysqlIo.BadStatementInterceptor", getExceptionInterceptor());
+    	 
+    	List<Extension> unwrappedInterceptors = Util.loadExtensions(
+    									this,
+    									this.props, 
+										getStatementInterceptors(),
+										"MysqlIo.BadStatementInterceptor", 
+										getExceptionInterceptor());
     	
     	this.statementInterceptors = new ArrayList<StatementInterceptorV2>(unwrappedInterceptors.size());
 
@@ -2302,6 +2316,8 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	}
 
 	/**
+	 * <p>创建到mysql服务器的io通道连接。</p>
+	 * 
 	 * Creates an IO channel to the server
 	 * 
 	 * @param isForReconnect
@@ -2322,8 +2338,12 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 			// to the backend before we get a chance to re-prepare them...
 			
 	
+			// 属性扩充。在这之前properties就不到10个属性，都是些什么端口，host，host_num什么的。
+			// exposeAsProperties调用后把那一堆ConnectionProperties丢进去了。增加了100多个属性
+			// ps:值为null的参数不会被添加进去。
 			Properties mergedProps  = exposeAsProperties(this.props);
 	
+			// 实际上在获取autoReconnect参数的值，默认当然又是false啦。。
 			if (!getHighAvailability()) {
 				connectOneTryOnly(isForReconnect, mergedProps);
 				
@@ -2466,8 +2486,8 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		int newPort = 3306;
 		String newHost = "localhost";
 		
-		String protocol = mergedProps.getProperty(NonRegisteringDriver.PROTOCOL_PROPERTY_KEY);
-		
+		// 普通的调用无协议头
+		String protocol = mergedProps.getProperty(NonRegisteringDriver.PROTOCOL_PROPERTY_KEY); 
 		if (protocol != null) {
 			// "new" style URL
 
@@ -2489,8 +2509,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 			}
 		} else {
 		
-			String[] parsedHostPortPair = NonRegisteringDriver
-					.parseHostPortPair(this.hostPortPair);
+			String[] parsedHostPortPair = NonRegisteringDriver.parseHostPortPair(this.hostPortPair);
 			newHost = parsedHostPortPair[NonRegisteringDriver.HOST_NAME_INDEX];
 
 			newHost = normalizeHost(newHost);
@@ -2502,14 +2521,21 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 
 		this.port = newPort;
 		this.host = newHost;
+		
+		// 到此， host和port经过检查和调整，准备完毕。
 
-		// reset max-rows to default value
+		// reset max-rows to default value  不懂这个值TODO
 		this.sessionMaxRows = -1;
 		
-		this.io = new MysqlIO(newHost, newPort,
-				mergedProps, getSocketFactoryClassName(),
-				getProxy(), getSocketTimeout(),
-				this.largeRowSizeThreshold.getValueAsInt());
+		this.io = new MysqlIO(
+				newHost, 
+				newPort,
+				mergedProps, 
+				getSocketFactoryClassName(),					// DEFAULT com.mysql.jdbc.StandardSocketFactory
+				getProxy(), 									// THIS
+				getSocketTimeout(),								// DEFAULT O
+				this.largeRowSizeThreshold.getValueAsInt());	// DEFAULT 2048
+		
 		this.io.doHandshake(this.user, this.password,
 				this.database);
 	}
@@ -2539,11 +2565,14 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 
 	private void connectOneTryOnly(boolean isForReconnect,
 			Properties mergedProps) throws SQLException {
+		
+		// 没连上的异常原因? 这个异常名字真是容易懂
 		Exception connectionNotEstablishedBecause = null;
 
 		try {
-			
+			// 看名字都知道最核心的连接代码在这里
 			coreConnect(mergedProps);
+			
 			this.connectionId = this.io.getThreadId();
 			this.isClosed = false;
 
@@ -3265,6 +3294,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	}
 	
 	private java.sql.DatabaseMetaData getMetaData(boolean checkClosed, boolean checkForInfoSchema) throws SQLException {
+		// 检查连接是否关闭
 		if (checkClosed) {
 			checkClosed();	
 		}
@@ -3513,6 +3543,8 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	}
 
 	/**
+	 * <p>初始化驱动属性。这个方法比较复杂</p>
+	 * 
 	 * Initializes driver properties that come from URL or properties passed to
 	 * the driver manager.
 	 * 
@@ -3521,20 +3553,22 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 	 * @throws SQLException
 	 *             DOCUMENT ME!
 	 */
-	private void initializeDriverProperties(Properties info)
-			throws SQLException {
+	private void initializeDriverProperties(Properties info) throws SQLException {
+		// 和mysql相关的一些基本属性初始化
 		initializeProperties(info);
 		
-		String exceptionInterceptorClasses = getExceptionInterceptors();
-		
+		// 一般来说异常拦截器ExceptionInterceptor都是空的...
+		String exceptionInterceptorClasses = getExceptionInterceptors(); 
 		if (exceptionInterceptorClasses != null && !"".equals(exceptionInterceptorClasses)) {
 			this.exceptionInterceptor = new ExceptionInterceptorChain(exceptionInterceptorClasses);
 		}
 		
+		// mysql支持JVM的编码转换参数?默认肯定是false了。 TODO
 		this.usePlatformCharsetConverters = getUseJvmCharsetConverters();
 
 		this.log = LogFactory.getLogger(getLogger(), LOGGER_INSTANCE_NAME, getExceptionInterceptor());
 
+		// what is useUsageAdvisor? TODO
 		if (getProfileSql() || getUseUsageAdvisor()) {
 			this.eventSink = ProfilerEventHandlerFactory.getInstance(getLoadBalanceSafeProxy());
 		}
@@ -3551,8 +3585,7 @@ public class ConnectionImpl extends ConnectionPropertiesImpl implements
 		}
 		
 		if (getCacheCallableStatements()) {
-			this.parsedCallableStatementCache = new LRUCache(
-					getCallableStatementCacheSize());
+			this.parsedCallableStatementCache = new LRUCache(getCallableStatementCacheSize());
 		}
 		
 		if (getAllowMultiQueries()) {

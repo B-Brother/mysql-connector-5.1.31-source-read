@@ -23,17 +23,13 @@
 
 package com.mysql.jdbc;
 
-import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-
-import java.util.List;
 
 import com.mysql.jdbc.Field;
 
 public class JDBC4DatabaseMetaData extends DatabaseMetaData {
+	// 正常入口
 	public JDBC4DatabaseMetaData(MySQLConnection connToSet, String databaseToSet) {
 		super(connToSet, databaseToSet);
 	}
