@@ -56,6 +56,8 @@ public class Driver extends NonRegisteringDriver implements java.sql.Driver {
 	//
 	// Register ourselves with the DriverManager
 	//
+	// 见注释知意。把自己(com.mysql.jdbc.Driver)注册到DriverManager。
+	// 注册的底层实现是把Driver对象包装后放到一个CopyOnWriteArrayList中。
 	static {
 		try {
 			java.sql.DriverManager.registerDriver(new Driver());

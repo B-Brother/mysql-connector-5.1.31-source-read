@@ -329,6 +329,7 @@ public class MysqlIO {
 	        // 不懂 TODO
 	        this.mysqlConnection = this.socketFactory.beforeHandshake();
 	
+	        // 准备input，output
 	        if (this.connection.getUseReadAheadInput()) {
 	        	this.mysqlInput = new ReadAheadInputStream(this.mysqlConnection.getInputStream(), 16384,
 	        			this.connection.getTraceProtocol(),
@@ -595,6 +596,8 @@ public class MysqlIO {
 	}
 
     /**
+     * <p>读包</p>
+     * 
      * Read one packet from the MySQL server
      *
      * @return the packet from the server.
@@ -605,8 +608,7 @@ public class MysqlIO {
     protected final Buffer readPacket() throws SQLException {
         try {
 
-            int lengthRead = readFully(this.mysqlInput,
-                    this.packetHeaderBuf, 0, 4);
+            int lengthRead = readFully(this.mysqlInput, this.packetHeaderBuf, 0, 4);
 
             if (lengthRead < 4) {
                 forceClose();
@@ -1091,6 +1093,7 @@ public class MysqlIO {
     void doHandshake(String user, String password, String database)
         throws SQLException {
         // Read the first packet
+    	// 这两个参数暂不明了 TODO
         this.checkPacketSequence = false;
         this.readPacketSequence = 0;
 

@@ -257,6 +257,7 @@ public class StandardSocketFactory implements SocketFactory, SocketMetadata {
 					// example...)
 					for (int i = 0; i < possibleAddresses.length; i++) {
 						try {
+							// 好了，到这里，客户端已经创建好了socket，基本任务完成。
 							this.rawSocket = new Socket(possibleAddresses[i], this.port);
 
 							// socket的tcp参数配置

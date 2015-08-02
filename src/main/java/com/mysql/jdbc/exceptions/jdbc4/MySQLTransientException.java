@@ -23,7 +23,6 @@
 
 package com.mysql.jdbc.exceptions.jdbc4;
 
-import java.sql.SQLException;
 import java.sql.SQLTransientException;
 
 public class MySQLTransientException extends SQLTransientException {
